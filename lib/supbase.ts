@@ -1,55 +1,34 @@
 import { createClient } from "@supabase/supabase-js";
  
+let client:
+  | ReturnType<typeof createClient>
+  | null = null;
  
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL;
+export function getSupabase() {
+  if (client) return client;
  
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
  
-const supabaseServiceKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY;
- 
- 
- 
-console.log(
-  "SUPABASE URL:",
-  supabaseUrl ? "FOUND" : "MISSING"
-);
- 
- 
-console.log(
-  "SUPABASE SERVICE KEY:",
-  supabaseServiceKey ? "FOUND" : "MISSING"
-);
- 
- 
- 
-if (!supabaseUrl || !supabaseServiceKey) {
- 
-  throw new Error(
-    "Supabase environment variables are missing"
-  );
- 
-}
- 
- 
- 
-export const supabase = createClient(
- 
-  supabaseUrl,
- 
-  supabaseServiceKey,
- 
-  {
- 
-    auth: {
- 
-      autoRefreshToken: false,
- 
-      persistSession: false,
- 
-    },
- 
+  if (!url) {
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL is not defined."
+    );
   }
  
-);
+  if (!serviceKey) {
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY is not defined."
+    );
+  }
+ 
+  client = createClient(url, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+ 
+  return client;
+}
  
