@@ -1,93 +1,70 @@
-import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supbase";
+import { NextRequest, NextResponse } from "next/server";
+import { getSupabase } from "@/lib/supbase";
  
- 
-export async function POST(
-  request: Request
-) {
- 
+export async function POST(req: NextRequest) {
   try {
+    const supabase = getSupabase();
  
-    const formData = await request.formData();
+    const formData = await req.formData();
  
- 
-    const file = formData.get("file") as File;
- 
+    const file = formData.get("file") as File | null;
  
     if (!file) {
       return NextResponse.json(
-        {
-          error: "File not found"
-        },
-        {
-          status: 400
-        }
+        { error: "فایلی انتخاب نشده است." },
+        { status: 400 }
       );
     }
  
+    const fileExt = file.name.split(".").pop();
  
-    const bytes = await file.arrayBuffer();
+    const fileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.${fileExt}`;
  
-    const buffer = Buffer.from(bytes);
- 
- 
-    const fileName =
-      `${Date.now()}-${file.name.replace(/\s/g, "-")}`;
- 
+    const arrayBuffer = await file.arrayBuffer();
  
     const { error } = await supabase.storage
       .from("receipts")
-      .upload(
-        fileName,
-        buffer,
-        {
-          contentType: file.type,
-        }
-      );
- 
+      .upload(fileName, Buffer.from(arrayBuffer), {
+        contentType: file.type,
+        upsert: false,
+      });
  
     if (error) {
+      console.error(error);
  
       return NextResponse.json(
         {
-          error: error.message
+          error: "خطا در آپلود فایل",
         },
         {
-          status: 500
+          status: 500,
         }
       );
- 
     }
  
- 
     const {
-      data
+      data: { publicUrl },
     } = supabase.storage
       .from("receipts")
       .getPublicUrl(fileName);
  
- 
- 
     return NextResponse.json({
- 
-      url: data.publicUrl
- 
+      success: true,
+      url: publicUrl,
     });
- 
- 
   } catch (error) {
- 
+    console.error(error);
  
     return NextResponse.json(
       {
-        error: "Upload failed"
+        error: "خطای سرور",
       },
       {
-        status: 500
+        status: 500,
       }
     );
- 
   }
- 
 }
  
