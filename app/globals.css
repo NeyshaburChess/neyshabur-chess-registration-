@@ -1,26 +1,85 @@
 @import "tailwindcss";
-
+ 
+ 
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
-
+ 
+ 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+ 
+  --font-sans: Arial, Helvetica, sans-serif;
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+ 
+ 
+* {
+  box-sizing: border-box;
 }
-
+ 
+ 
+html {
+  direction: rtl;
+}
+ 
+ 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
 }
+ 
+ 
+ 
+/* فرم ثبت نام */
+ 
+.input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+ 
+  padding: 14px 16px;
+ 
+  font-size: 15px;
+ 
+  outline: none;
+ 
+  background: white;
+ 
+  color: #111827;
+ 
+  transition: all .2s ease;
+}
+ 
+ 
+.input::placeholder {
+  color: #9ca3af;
+}
+ 
+ 
+.input:focus {
+ 
+  border-color: #2563eb;
+ 
+  box-shadow:
+    0 0 0 4px rgba(37,99,235,.12);
+ 
+}
+ 
+ 
+ 
+/* اسکرول بهتر */
+ 
+::-webkit-scrollbar {
+  width: 8px;
+}
+ 
+ 
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 20px;
+}
+ 
