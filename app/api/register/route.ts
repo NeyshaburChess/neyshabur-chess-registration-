@@ -2,15 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendRegistrationMail } from "@/lib/mail";
  
- 
-export async function POST(
-  request: Request
-) {
- 
+export async function POST(request: Request) {
   try {
- 
     const body = await request.json();
- 
  
     const {
       fullName,
@@ -20,10 +14,8 @@ export async function POST(
       city,
       tournamentName,
       amount,
-      receiptUrl
+      receiptUrl,
     } = body;
- 
- 
  
     if (
       !fullName ||
@@ -32,92 +24,55 @@ export async function POST(
       !amount ||
       !receiptUrl
     ) {
- 
       return NextResponse.json(
         {
-          error: "اطلاعات ناقص است"
+          error: "لطفاً تمام اطلاعات ضروری را وارد کنید.",
         },
         {
-          status:400
+          status: 400,
         }
       );
- 
     }
  
- 
- 
-    const registration =
-      await prisma.registration.create({
- 
-        data: {
- 
-          fullName,
- 
-          fideId: fideId || null,
- 
-          phone,
- 
-          email: email || null,
- 
-          city: city || null,
- 
- 
-          tournamentName,
- 
- 
-          amount: Number(amount),
- 
- 
-          receiptUrl,
- 
- 
-        }
- 
-      });
- 
- 
- 
-    await sendRegistrationMail({
- 
-      name: fullName,
- 
-      fideId: fideId || "",
- 
-      tournament: tournamentName,
- 
+    const registration = await prisma.registration.create({
+      data: {
+        fullName,
+        fideId: fideId || null,
+        phone,
+        email: email || null,
+        city: city || null,
+        tournamentName,
+        amount: Number(amount),
+        receiptUrl,
+      },
     });
  
- 
+    // اگر ارسال ایمیل خطا داد، ثبت نام حذف نشود
+    try {
+      await sendRegistrationMail({
+        name: fullName,
+        fideId: fideId || "-",
+        tournament: tournamentName,
+      });
+    } catch (mailError) {
+      console.error("MAIL ERROR:", mailError);
+    }
  
     return NextResponse.json({
- 
-      success:true,
- 
-      id:registration.id
- 
+      success: true,
+      id: registration.id,
     });
- 
- 
- 
-  } catch(error) {
- 
- 
-    console.error(error);
- 
+  } catch (error: any) {
+    console.error("REGISTER ERROR:", error);
  
     return NextResponse.json(
- 
       {
-        error:"خطا در ثبت نام"
+        error: error?.message || "خطا در ثبت نام",
       },
- 
       {
-        status:500
+        status: 500,
       }
- 
     );
- 
   }
- 
 }
  

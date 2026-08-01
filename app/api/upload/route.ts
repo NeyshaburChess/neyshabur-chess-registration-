@@ -16,17 +16,47 @@ export async function POST(req: NextRequest) {
       );
     }
  
-    const fileExt = file.name.split(".").pop();
+    const allowed = [
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+      "application/pdf",
+    ];
  
-    const fileName = `${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(2)}.${fileExt}`;
+    if (!allowed.includes(file.type)) {
+      return NextResponse.json(
+        {
+          error: "فقط فایل JPG، PNG یا PDF مجاز است.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
  
-    const arrayBuffer = await file.arrayBuffer();
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json(
+        {
+          error: "حجم فایل نباید بیشتر از ۵ مگابایت باشد.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+ 
+    const ext = file.name.split(".").pop();
+ 
+    const filename =
+      `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2)}.${ext}`;
+ 
+    const buffer = Buffer.from(await file.arrayBuffer());
  
     const { error } = await supabase.storage
       .from("receipts")
-      .upload(fileName, Buffer.from(arrayBuffer), {
+      .upload(filename, buffer, {
         contentType: file.type,
         upsert: false,
       });
@@ -36,7 +66,7 @@ export async function POST(req: NextRequest) {
  
       return NextResponse.json(
         {
-          error: "خطا در آپلود فایل",
+          error: error.message,
         },
         {
           status: 500,
@@ -48,18 +78,18 @@ export async function POST(req: NextRequest) {
       data: { publicUrl },
     } = supabase.storage
       .from("receipts")
-      .getPublicUrl(fileName);
+      .getPublicUrl(filename);
  
     return NextResponse.json({
       success: true,
       url: publicUrl,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
  
     return NextResponse.json(
       {
-        error: "خطای سرور",
+        error: error.message,
       },
       {
         status: 500,

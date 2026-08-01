@@ -1,319 +1,201 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
  
+export const dynamic = "force-dynamic";
  
 export default async function AdminPage() {
- 
-  const cookieStore = await cookies();
- 
-  const session = cookieStore.get(
-    "chess_admin_session"
-  );
- 
- 
-  if (!session) {
-    redirect("/admin/login");
-  }
- 
- 
- 
-  const registrations =
-    await prisma.registration.findMany({
- 
-      orderBy: {
-        createdAt: "desc"
-      }
- 
-    });
- 
- 
+  const registrations = await prisma.registration.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
  
   return (
+    <main className="min-h-screen bg-slate-100 p-8">
+      <div className="max-w-7xl mx-auto">
  
-    <main className="
-      min-h-screen
-      bg-[#07192f]
-      p-5
-      md:p-10
-    ">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
  
-      <div className="
-        max-w-7xl
-        mx-auto
-      ">
+          <div>
+            <h1 className="text-3xl font-bold text-[#07192F]">
+              پنل مدیریت ثبت نام مسابقات
+            </h1>
  
- 
-        <div className="
-          bg-white
-          rounded-3xl
-          p-6
-          shadow-2xl
-        ">
- 
- 
-          <div className="
-            flex
-            justify-between
-            items-center
-            mb-8
-            flex-wrap
-            gap-4
-          ">
- 
- 
-            <div>
- 
-              <h1 className="
-                text-3xl
-                font-bold
-                text-[#07192f]
-              ">
-                پنل مدیریت ثبت نام مسابقات
-              </h1>
- 
- 
-              <p className="
-                text-gray-500
-                mt-2
-              ">
-                لیست شرکت کنندگان
-              </p>
- 
-            </div>
- 
- 
- 
-            <a
-              href="/api/admin/export"
-              className="
-                bg-green-600
-                text-white
-                px-5
-                py-3
-                rounded-xl
-                hover:bg-green-700
-              "
-            >
-              خروجی Excel
-            </a>
- 
- 
+            <p className="text-gray-500 mt-2">
+              تعداد ثبت‌نام‌ها: {registrations.length}
+            </p>
           </div>
  
- 
- 
-          <div className="overflow-x-auto">
- 
- 
-            <table className="
-              w-full
-              text-right
-            ">
- 
- 
-              <thead>
- 
-                <tr className="
-                  border-b
-                  bg-gray-50
-                ">
- 
- 
-                  <th className="p-4">
-                    نام
-                  </th>
- 
- 
-                  <th className="p-4">
-                    فیده
-                  </th>
- 
- 
-                  <th className="p-4">
-                    تماس
-                  </th>
- 
- 
-                  <th className="p-4">
-                    مسابقه
-                  </th>
- 
- 
-                  <th className="p-4">
-                    مبلغ
-                  </th>
- 
- 
-                  <th className="p-4">
-                    فیش
-                  </th>
- 
- 
-                  <th className="p-4">
-                    وضعیت
-                  </th>
- 
- 
-                  <th className="p-4">
-                    عملیات
-                  </th>
- 
- 
-                </tr>
- 
-              </thead>
- 
- 
- 
-              <tbody>
- 
- 
-                {
-                  registrations.map((item)=>(
- 
-                    <tr
-                      key={item.id}
-                      className="
-                        border-b
-                        hover:bg-gray-50
-                      "
-                    >
- 
- 
-                      <td className="p-4 font-semibold">
-                        {item.fullName}
-                      </td>
- 
- 
- 
-                      <td className="p-4">
-                        {item.fideId || "-"}
-                      </td>
- 
- 
- 
-                      <td className="p-4">
-                        {item.phone}
-                      </td>
- 
- 
- 
-                      <td className="p-4">
-                        {item.tournamentName}
-                      </td>
- 
- 
- 
-                      <td className="p-4">
-                        {item.amount.toLocaleString()}
-                      </td>
- 
- 
- 
-                      <td className="p-4">
- 
-                        <a
-                          href={item.receiptUrl}
-                          target="_blank"
-                          className="
-                            text-blue-600
-                            underline
-                          "
-                        >
-                          مشاهده
-                        </a>
- 
-                      </td>
- 
- 
- 
-                      <td className="p-4">
- 
- 
-                        <span
-                          className={`
-                            px-3
-                            py-1
-                            rounded-full
-                            text-sm
- 
-                            ${
-                              item.status === "APPROVED"
-                              ?
-                              "bg-green-100 text-green-700"
-                              :
-                              item.status === "REJECTED"
-                              ?
-                              "bg-red-100 text-red-700"
-                              :
-                              "bg-yellow-100 text-yellow-700"
-                            }
-                          `}
-                        >
- 
-                          {
-                            item.status === "APPROVED"
-                            ?
-                            "تایید شده"
-                            :
-                            item.status === "REJECTED"
-                            ?
-                            "رد شده"
-                            :
-                            "در انتظار"
-                          }
- 
- 
-                        </span>
- 
- 
-                      </td>
- 
- 
- 
-                      <td className="p-4">
- 
-                        <button
-                          className="
-                            bg-gray-800
-                            text-white
-                            px-3
-                            py-2
-                            rounded-lg
-                          "
-                        >
-                          پرینت
-                        </button>
- 
- 
-                      </td>
- 
- 
-                    </tr>
- 
-                  ))
-                }
- 
- 
-              </tbody>
- 
- 
-            </table>
- 
- 
-          </div>
- 
+          <Link
+            href="/api/admin/export"
+            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold transition"
+          >
+            دانلود فایل Excel
+          </Link>
  
         </div>
  
+        <div className="overflow-x-auto rounded-2xl bg-white shadow-xl">
+ 
+          <table className="min-w-full">
+ 
+            <thead className="bg-[#07192F] text-white">
+ 
+              <tr>
+ 
+                <th className="px-4 py-3 text-center">ردیف</th>
+ 
+                <th className="px-4 py-3 text-center">
+                  نام و نام خانوادگی
+                </th>
+ 
+                <th className="px-4 py-3 text-center">
+                  آیدی فیده
+                </th>
+ 
+                <th className="px-4 py-3 text-center">
+                  شماره تماس
+                </th>
+ 
+                <th className="px-4 py-3 text-center">
+                  ایمیل
+                </th>
+ 
+                <th className="px-4 py-3 text-center">
+                  شهر
+                </th>
+ 
+                <th className="px-4 py-3 text-center">
+                  مسابقه
+                </th>
+ 
+                <th className="px-4 py-3 text-center">
+                  مبلغ
+                </th>
+ 
+                <th className="px-4 py-3 text-center">
+                  وضعیت
+                </th>
+ 
+                <th className="px-4 py-3 text-center">
+                  فیش واریزی
+                </th>
+ 
+                <th className="px-4 py-3 text-center">
+                  تاریخ ثبت
+                </th>
+ 
+              </tr>
+ 
+            </thead>
+ 
+            <tbody>
+ 
+              {registrations.length === 0 ? (
+ 
+                <tr>
+ 
+                  <td
+                    colSpan={11}
+                    className="py-10 text-center text-gray-500"
+                  >
+                    هنوز هیچ ثبت نامی انجام نشده است.
+                  </td>
+ 
+                </tr>
+ 
+              ) : (
+ 
+                registrations.map((item, index) => (
+ 
+                  <tr
+                    key={item.id}
+                    className="border-b hover:bg-slate-50"
+                  >
+ 
+                    <td className="px-4 py-3 text-center">
+                      {index + 1}
+                    </td>
+ 
+                    <td className="px-4 py-3">
+                      {item.fullName}
+                    </td>
+ 
+                    <td className="px-4 py-3 text-center">
+                      {item.fideId || "-"}
+                    </td>
+ 
+                    <td className="px-4 py-3 text-center">
+                      {item.phone}
+                    </td>
+ 
+                    <td className="px-4 py-3 text-center">
+                      {item.email || "-"}
+                    </td>
+ 
+                    <td className="px-4 py-3 text-center">
+                      {item.city || "-"}
+                    </td>
+ 
+                    <td className="px-4 py-3 text-center">
+                      {item.tournamentName}
+                    </td>
+ 
+                    <td className="px-4 py-3 text-center">
+                      {item.amount.toLocaleString()} تومان
+                    </td>
+ 
+                    <td className="px-4 py-3 text-center">
+ 
+                      <span
+                        className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${
+                          item.status === "APPROVED"
+                            ? "bg-green-100 text-green-700"
+                            : item.status === "REJECTED"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {item.status === "APPROVED"
+                          ? "تأیید شده"
+                          : item.status === "REJECTED"
+                          ? "رد شده"
+                          : "در انتظار"}
+                      </span>
+ 
+                    </td>
+ 
+                    <td className="px-4 py-3 text-center">
+ 
+                      <a
+                        href={item.receiptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        مشاهده فیش
+                      </a>
+ 
+                    </td>
+ 
+                    <td className="px-4 py-3 text-center whitespace-nowrap">
+                      {new Date(item.createdAt).toLocaleDateString("fa-IR")}
+                    </td>
+ 
+                  </tr>
+ 
+                ))
+ 
+              )}
+ 
+            </tbody>
+ 
+          </table>
+ 
+        </div>
  
       </div>
- 
- 
     </main>
- 
   );
- 
 }
  
