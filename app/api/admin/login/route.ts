@@ -12,11 +12,11 @@ export async function POST(
  
     const body = await request.json();
  
+    const username =
+      body.username?.trim();
  
-    const {
-      username,
-      password
-    } = body;
+    const password =
+      body.password?.trim();
  
  
     if (!username || !password) {
@@ -33,22 +33,33 @@ export async function POST(
     }
  
  
+    console.log("LOGIN USER:", username);
  
-    const admin = await prisma.admin.findUnique({
  
-      where: {
-        username
-      }
+    const admin =
+      await prisma.admin.findUnique({
  
-    });
+        where: {
+          username: username
+        }
  
+      });
+ 
+ 
+    console.log(
+      "ADMIN FOUND:",
+      admin
+        ? admin.username
+        : "NULL"
+    );
  
  
     if (!admin) {
  
       return NextResponse.json(
         {
-          error: "نام کاربری یا رمز اشتباه است"
+          error:
+          "نام کاربری یا رمز اشتباه است"
         },
         {
           status: 401
@@ -66,15 +77,22 @@ export async function POST(
       );
  
  
+    console.log(
+      "PASSWORD CHECK:",
+      validPassword
+    );
+ 
+ 
  
     if (!validPassword) {
  
       return NextResponse.json(
         {
-          error: "نام کاربری یا رمز اشتباه است"
+          error:
+          "نام کاربری یا رمز اشتباه است"
         },
         {
-          status:401
+          status: 401
         }
       );
  
@@ -82,43 +100,56 @@ export async function POST(
  
  
  
-    const cookieStore = await cookies();
+    const cookieStore =
+      await cookies();
  
  
     cookieStore.set(
       "chess_admin_session",
       admin.id,
       {
-        httpOnly:true,
-        secure:process.env.NODE_ENV === "production",
-        sameSite:"lax",
-        maxAge:60 * 60 * 24,
-        path:"/"
+ 
+        httpOnly: true,
+ 
+        secure:
+          process.env.NODE_ENV === "production",
+ 
+        sameSite: "lax",
+ 
+        maxAge:
+          60 * 60 * 24,
+ 
+        path: "/"
+ 
       }
     );
  
  
  
-    return NextResponse.json({
- 
-      success:true
- 
-    });
- 
- 
- 
-  } catch(error) {
+    return NextResponse.json(
+      {
+        success: true
+      }
+    );
  
  
-    console.error(error);
+ 
+  } catch (error) {
+ 
+ 
+    console.error(
+      "LOGIN ERROR:",
+      error
+    );
  
  
     return NextResponse.json(
       {
-        error:"خطای سرور"
+        error:
+        "خطای سرور"
       },
       {
-        status:500
+        status: 500
       }
     );
  
