@@ -1,39 +1,39 @@
 import { createClient } from "@supabase/supabase-js";
  
-let client:
-  | ReturnType<typeof createClient>
-  | null = null;
+let supabaseClient: ReturnType<typeof createClient> | null = null;
  
 export function getSupabase() {
-  if (client) return client;
+  if (supabaseClient) {
+    return supabaseClient;
+  }
  
-  const url =
-    process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    process.env.SUPABASE_URL;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
  
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
  
-  if (!url) {
+  if (!supabaseUrl) {
     throw new Error(
-      "SUPABASE URL is not defined."
+      "NEXT_PUBLIC_SUPABASE_URL is missing"
     );
   }
  
-  if (!serviceKey) {
+  if (!serviceRoleKey) {
     throw new Error(
-      "SUPABASE SERVICE ROLE KEY is not defined."
+      "SUPABASE_SERVICE_ROLE_KEY is missing. Add it to Cloudflare Runtime Variables."
     );
   }
  
-  client = createClient(url, serviceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+  supabaseClient = createClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
  
-  return client;
+  return supabaseClient;
 }
  

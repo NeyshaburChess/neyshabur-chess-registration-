@@ -1,89 +1,146 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
  
+export const runtime = "nodejs";
+ 
 export async function POST(req: NextRequest) {
   try {
     const supabase = getSupabase();
  
     const formData = await req.formData();
  
-    const file = formData.get("file") as File | null;
+    const file = formData.get("file");
  
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json(
-        { error: "فایلی انتخاب نشده است." },
-        { status: 400 }
+        {
+          success: false,
+          error: "فایلی ارسال نشده است.",
+        },
+        {
+          status: 400,
+        }
       );
     }
  
-    const allowed = [
+ 
+    const allowedTypes = [
       "image/jpeg",
       "image/png",
       "image/jpg",
       "application/pdf",
     ];
  
-    if (!allowed.includes(file.type)) {
+ 
+    if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
         {
-          error: "فقط فایل JPG، PNG یا PDF مجاز است.",
+          success: false,
+          error:
+            "فقط فایل JPG، PNG و PDF مجاز است.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
  
-    if (file.size > 5 * 1024 * 1024) {
+ 
+    const maxSize = 5 * 1024 * 1024;
+ 
+ 
+    if (file.size > maxSize) {
       return NextResponse.json(
         {
-          error: "حجم فایل نباید بیشتر از ۵ مگابایت باشد.",
+          success: false,
+          error:
+            "حجم فایل بیشتر از ۵ مگابایت است.",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
  
-    const ext = file.name.split(".").pop();
  
-    const filename = `${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(2)}.${ext}`;
+    const extension =
+      file.name.split(".").pop() || "file";
  
-    const buffer = Buffer.from(await file.arrayBuffer());
  
-    const { error } = await supabase.storage
-      .from("receipts")
-      .upload(filename, buffer, {
-        contentType: file.type,
-        upsert: false,
-      });
+    const fileName =
+      `${Date.now()}-${crypto.randomUUID()}.${extension}`;
  
-    if (error) {
-      console.error("SUPABASE UPLOAD ERROR:", error);
+ 
+    const buffer =
+      Buffer.from(await file.arrayBuffer());
+ 
+ 
+    const { error: uploadError } =
+      await supabase.storage
+        .from("receipts")
+        .upload(
+          fileName,
+          buffer,
+          {
+            contentType: file.type,
+            upsert: false,
+          }
+        );
+ 
+ 
+    if (uploadError) {
+ 
+      console.error(
+        "SUPABASE UPLOAD ERROR:",
+        uploadError
+      );
  
       return NextResponse.json(
         {
-          error: error.message,
+          success: false,
+          error: uploadError.message,
         },
-        { status: 500 }
+        {
+          status: 500,
+        }
       );
     }
  
-    const { data } = supabase.storage
-      .from("receipts")
-      .getPublicUrl(filename);
  
-    return NextResponse.json({
-      success: true,
-      url: data.publicUrl,
-    });
+    const {
+      data: publicData,
+    } =
+      supabase.storage
+        .from("receipts")
+        .getPublicUrl(fileName);
  
-  } catch (error: any) {
-    console.error("UPLOAD ERROR:", error);
  
     return NextResponse.json(
       {
-        error: error.message || "خطای ناشناخته",
+        success: true,
+        url: publicData.publicUrl,
+      }
+    );
+ 
+ 
+  } catch (error: any) {
+ 
+    console.error(
+      "UPLOAD ERROR:",
+      error
+    );
+ 
+ 
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error?.message ||
+          "خطای داخلی سرور",
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
