@@ -1,14 +1,18 @@
 import { createClient } from "@supabase/supabase-js";
  
-let client:
-  | ReturnType<typeof createClient>
-  | null = null;
+let client: ReturnType<typeof createClient> | null = null;
  
 export function getSupabase() {
   if (client) return client;
  
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+ 
+  console.log("SUPABASE URL:", url);
+  console.log(
+    "SERVICE KEY:",
+    serviceKey ? "FOUND" : "MISSING"
+  );
  
   if (!url) {
     throw new Error(

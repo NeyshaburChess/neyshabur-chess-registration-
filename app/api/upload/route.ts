@@ -28,9 +28,7 @@ export async function POST(req: NextRequest) {
         {
           error: "فقط فایل JPG، PNG یا PDF مجاز است.",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
  
@@ -39,18 +37,15 @@ export async function POST(req: NextRequest) {
         {
           error: "حجم فایل نباید بیشتر از ۵ مگابایت باشد.",
         },
-        {
-          status: 400,
-        }
+        { status: 400 }
       );
     }
  
     const ext = file.name.split(".").pop();
  
-    const filename =
-      `${Date.now()}-${Math.random()
-        .toString(36)
-        .substring(2)}.${ext}`;
+    const filename = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.${ext}`;
  
     const buffer = Buffer.from(await file.arrayBuffer());
  
@@ -62,38 +57,33 @@ export async function POST(req: NextRequest) {
       });
  
     if (error) {
-      console.error(error);
+      console.error("SUPABASE UPLOAD ERROR:", error);
  
       return NextResponse.json(
         {
           error: error.message,
         },
-        {
-          status: 500,
-        }
+        { status: 500 }
       );
     }
  
-    const {
-      data: { publicUrl },
-    } = supabase.storage
+    const { data } = supabase.storage
       .from("receipts")
       .getPublicUrl(filename);
  
     return NextResponse.json({
       success: true,
-      url: publicUrl,
+      url: data.publicUrl,
     });
+ 
   } catch (error: any) {
-    console.error(error);
+    console.error("UPLOAD ERROR:", error);
  
     return NextResponse.json(
       {
-        error: error.message,
+        error: error.message || "خطای ناشناخته",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }
