@@ -1,159 +1,58 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
-import { cookies } from "next/headers";
  
- 
-export async function POST(
-  request: Request
-) {
- 
+export async function POST(request: Request) {
   try {
+    const { username, password } = await request.json();
  
-    const body = await request.json();
+    console.log("LOGIN TRY:", username, password);
  
-    const username =
-      body.username?.trim();
+    const admin = await prisma.admin.findUnique({
+      where: {
+        username: username
+      }
+    });
  
-    const password =
-      body.password?.trim();
- 
- 
-    if (!username || !password) {
- 
-      return NextResponse.json(
-        {
-          error: "اطلاعات ناقص است"
-        },
-        {
-          status: 400
-        }
-      );
- 
-    }
- 
- 
-    console.log("LOGIN USER:", username);
- 
- 
-    const admin =
-      await prisma.admin.findUnique({
- 
-        where: {
-          username: username
-        }
- 
-      });
- 
- 
-    console.log(
-      "ADMIN FOUND:",
-      admin
-        ? admin.username
-        : "NULL"
-    );
- 
+    console.log("ADMIN FROM DB:", admin);
  
     if (!admin) {
- 
-      return NextResponse.json(
-        {
-          error:
-          "نام کاربری یا رمز اشتباه است"
-        },
-        {
-          status: 401
-        }
-      );
- 
+      return NextResponse.json({
+        step: "admin_not_found",
+        username
+      }, {
+        status: 401
+      });
     }
  
  
- 
-    const validPassword =
-      await bcrypt.compare(
-        password,
-        admin.password
-      );
- 
- 
-    console.log(
-      "PASSWORD CHECK:",
-      validPassword
+    const check = await bcrypt.compare(
+      password,
+      admin.password
     );
  
+    console.log("PASSWORD CHECK:", check);
  
  
-    if (!validPassword) {
- 
-      return NextResponse.json(
-        {
-          error:
-          "نام کاربری یا رمز اشتباه است"
-        },
-        {
-          status: 401
-        }
-      );
- 
-    }
- 
- 
- 
-    const cookieStore =
-      await cookies();
- 
- 
-    cookieStore.set(
-      "chess_admin_session",
-      admin.id,
-      {
- 
-        httpOnly: true,
- 
-        secure:
-          process.env.NODE_ENV === "production",
- 
-        sameSite: "lax",
- 
-        maxAge:
-          60 * 60 * 24,
- 
-        path: "/"
- 
-      }
-    );
- 
- 
- 
-    return NextResponse.json(
-      {
-        success: true
-      }
-    );
- 
+    return NextResponse.json({
+      step: "success",
+      username: admin.username,
+      passwordMatch: check,
+      hash: admin.password
+    });
  
  
   } catch (error) {
  
+    console.error(error);
  
-    console.error(
-      "LOGIN ERROR:",
-      error
-    );
- 
- 
-    return NextResponse.json(
-      {
-        error:
-        "خطای سرور"
-      },
-      {
-        status: 500
-      }
-    );
+    return NextResponse.json({
+      error: "server error",
+      detail: String(error)
+    },{
+      status:500
+    });
  
   }
- 
 }
  
