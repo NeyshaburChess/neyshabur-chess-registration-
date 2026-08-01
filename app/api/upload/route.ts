@@ -1,24 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
  
-export const runtime = "nodejs";
- 
 export async function POST(req: NextRequest) {
   try {
     const supabase = getSupabase();
  
     const formData = await req.formData();
  
-    const file = formData.get("file");
+    const file = formData.get("file") as File | null;
  
-    if (!(file instanceof File)) {
+    if (!file) {
       return NextResponse.json(
         {
-          success: false,
-          error: "فایلی ارسال نشده است.",
+          error: "فایلی انتخاب نشده است."
         },
         {
-          status: 400,
+          status: 400
         }
       );
     }
@@ -27,103 +24,94 @@ export async function POST(req: NextRequest) {
     const allowedTypes = [
       "image/jpeg",
       "image/png",
-      "image/jpg",
-      "application/pdf",
+      "application/pdf"
     ];
  
  
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
         {
-          success: false,
           error:
-            "فقط فایل JPG، PNG و PDF مجاز است.",
+          "فرمت فایل مجاز نیست."
         },
         {
-          status: 400,
+          status:400
         }
       );
     }
  
  
-    const maxSize = 5 * 1024 * 1024;
- 
- 
-    if (file.size > maxSize) {
+    if (file.size > 5 * 1024 * 1024) {
       return NextResponse.json(
         {
-          success: false,
           error:
-            "حجم فایل بیشتر از ۵ مگابایت است.",
+          "حجم فایل بیشتر از ۵ مگابایت است."
         },
         {
-          status: 400,
+          status:400
         }
       );
     }
  
  
-    const extension =
+    const ext =
       file.name.split(".").pop() || "file";
  
  
-    const fileName =
-      `${Date.now()}-${crypto.randomUUID()}.${extension}`;
+    const filename =
+      `${Date.now()}-${crypto.randomUUID()}.${ext}`;
  
  
     const buffer =
       Buffer.from(await file.arrayBuffer());
  
  
-    const { error: uploadError } =
+    const { error } =
       await supabase.storage
-        .from("receipts")
-        .upload(
-          fileName,
-          buffer,
-          {
-            contentType: file.type,
-            upsert: false,
-          }
-        );
+      .from("receipts")
+      .upload(
+        filename,
+        buffer,
+        {
+          contentType:file.type,
+          upsert:false
+        }
+      );
  
  
-    if (uploadError) {
- 
+    if (error) {
       console.error(
         "SUPABASE UPLOAD ERROR:",
-        uploadError
+        error
       );
  
       return NextResponse.json(
         {
-          success: false,
-          error: uploadError.message,
+          error:error.message
         },
         {
-          status: 500,
+          status:500
         }
       );
     }
  
  
     const {
-      data: publicData,
+      data
     } =
-      supabase.storage
-        .from("receipts")
-        .getPublicUrl(fileName);
+    supabase.storage
+    .from("receipts")
+    .getPublicUrl(filename);
  
  
-    return NextResponse.json(
-      {
-        success: true,
-        url: publicData.publicUrl,
-      }
-    );
+ 
+    return NextResponse.json({
+      success:true,
+      url:data.publicUrl
+    });
  
  
-  } catch (error: any) {
+  } catch(error:any){
  
     console.error(
       "UPLOAD ERROR:",
@@ -133,13 +121,10 @@ export async function POST(req: NextRequest) {
  
     return NextResponse.json(
       {
-        success: false,
-        error:
-          error?.message ||
-          "خطای داخلی سرور",
+        error:error.message
       },
       {
-        status: 500,
+        status:500
       }
     );
   }
