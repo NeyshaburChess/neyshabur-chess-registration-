@@ -1,11 +1,11 @@
-// lib/supabase.ts
- 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  
-let client: SupabaseClient | null = null;
+let supabase: SupabaseClient | null = null;
  
 export function getSupabase(): SupabaseClient {
-  if (client) return client;
+  if (supabase) {
+    return supabase;
+  }
  
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL ??
@@ -16,17 +16,17 @@ export function getSupabase(): SupabaseClient {
  
   if (!supabaseUrl) {
     throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL is missing. Add it to Cloudflare Runtime Variables."
+      "NEXT_PUBLIC_SUPABASE_URL is missing."
     );
   }
  
   if (!serviceRoleKey) {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY is missing. Add it to Cloudflare Runtime Variables."
+      "SUPABASE_SERVICE_ROLE_KEY is missing."
     );
   }
  
-  client = createClient(
+  supabase = createClient(
     supabaseUrl,
     serviceRoleKey,
     {
@@ -35,15 +35,13 @@ export function getSupabase(): SupabaseClient {
         persistSession: false,
       },
       global: {
-        headers: {
-          "X-Client-Info": "neyshabur-chess",
-        },
+        fetch,
       },
     }
   );
  
-  return client;
+  return supabase;
 }
  
-export const supabase = getSupabase();
+export default getSupabase;
  
