@@ -1,28 +1,29 @@
 import { createClient } from "@supabase/supabase-js";
  
-let client: ReturnType<typeof createClient> | null = null;
+let client:
+  | ReturnType<typeof createClient>
+  | null = null;
  
 export function getSupabase() {
   if (client) return client;
  
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    process.env.SUPABASE_URL;
  
-  console.log("SUPABASE URL:", url);
-  console.log(
-    "SERVICE KEY:",
-    serviceKey ? "FOUND" : "MISSING"
-  );
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY;
  
   if (!url) {
     throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL is not defined."
+      "SUPABASE URL is not defined."
     );
   }
  
   if (!serviceKey) {
     throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY is not defined."
+      "SUPABASE SERVICE ROLE KEY is not defined."
     );
   }
  
